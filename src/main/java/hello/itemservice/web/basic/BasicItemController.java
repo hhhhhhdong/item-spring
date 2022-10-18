@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -83,11 +84,35 @@ public class BasicItemController {
         return "basic/item";
     }
 
-    @PostMapping("/add")
+//    @PostMapping("/add")
     public String addItemV4(Item item) {
 //       @ModelAttribute는 생략가능
         itemRepository.save(item);
         return "basic/item";
+    }
+
+    /**
+     * PRG(Post/Redirect/Get) 문제 해결
+     * Post요청 후 Redirect없이 새로운 페이지를 보여주면
+     * 새로고침시 동일한 Post요청이 또 오게된다.
+     * 이를 해결하기 위해 Post요청 후에 Redirect로 페이지를 보여준다.
+     */
+//    @PostMapping("/add")
+    public String addItemV5(Item item) {
+        itemRepository.save(item);
+        return "redirect:/basic/items/" + item.getId();
+    }
+
+    /**
+     * RedirectAttributes를 이용해서 URL 인코딩되기 때문에 더욱 안전하다.
+     * 또한 addAttribute를 이용해 param을 넘길 수도 있다.
+     */
+    @PostMapping("/add")
+    public String addItemV6(Item item, RedirectAttributes redirectAttributes) {
+        Item savedItem = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/basic/items/{itemId}";
     }
 
     @GetMapping("/{itemId}/edit")
